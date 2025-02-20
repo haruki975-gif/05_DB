@@ -589,10 +589,38 @@ ORDER BY DEPT_CODE ASC;
 
 -- ORDER BY절 해석 전 SELECT, FROM절이 모두 해석되어 있기 때문에
 -- SELECT절에 없는 컬럼을 작성해도 정렬이 가능하다!
+-------------------------------------------------
+/* NULLS FIRST, NULLS LAST 확인 */
+SELECT EMP_NAME, BONUS
+FROM EMPLOYEE 
+ORDER BY BONUS ASC NULLS FIRST;
+-- 오름차순 기본값은 NULLS LAST
+-- 내림차순 기본값은 NULLS FIRST
+-------------------------------------------------
+/* 정렬 기준 "중첩" 작성
+ * 
+ * -먼저 작성된 정렬을 적용하고
+ *  그 안에서 형성된 그룹별로 정렬 진행
+ * 
+ * -형성된 그룹 : 같은 컬럼 값을 가지는 행
+ */
 
+-- EMPLOYEE 테이블에서
+-- 이름, 부서코드, 급여를
+-- 부서코드 오름차순, 급여 내림차순으로 정렬
+SELECT EMP_NAME , DEPT_CODE , SALARY 
+FROM EMPLOYEE 
+ORDER BY DEPT_CODE ASC, SALARY DESC;
 
-
-
+--EMPLOYEE 테이블에서
+--이름, 부서코드, 직급코드를 조회 (별칭 적용)
+--부서코드 오름차순, 직급코드 내림차순, 이름 오름차순
+SELECT EMP_NAME 이름, DEPT_CODE 부서코드, JOB_CODE 직급코드
+FROM EMPLOYEE 
+ORDER BY 
+부서코드 ASC, --별칭
+3 DESC, 		  --순서
+EMP_NAME ASC; --컬럼명
 
 
 
