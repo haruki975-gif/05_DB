@@ -348,8 +348,144 @@ WHERE SALARY >= 3000000 AND SALARY < 5000000; -- 16행
 SELECT EMP_ID , EMP_NAME , SALARY 
 FROM EMPLOYEE 
 WHERE SALARY < 3000000 OR SALARY >= 5000000; -- 7행
+------------------------------------------------
+/* 컬럼명 BETWEEN (A) AND (B)
+ * -컬럼 값이 (A)이상 (B)이하인 경우 TRUE (조회하겠다)
+ */
+-- EMPLOYEE 테이블에서
+-- 급여가 400만~600만 사원의 이름, 급여 조회
+SELECT EMP_NAME , SALARY 
+FROM EMPLOYEE 
+-- SALARY >= 4000000 AND SALARY <= 6000000
+WHERE SALARY BETWEEN 4000000 AND 6000000; -- 6행
+-------------------------------------------------
+/* 컬럼명 NOT BETWEEN (A) AND (B)
+ * -컬럼 값이 (A)이상 (B)이하인 경우 FALSE (조회하겠다)
+ * 	-> (A)미만 (B)초과인 경우 TRUE
+ */
+-- EMPLOYEE 테이블에서
+-- 급여가 400만 미만, 600만 초과인 사원의 이름, 급여 조회
+SELECT EMP_NAME , SALARY 
+FROM EMPLOYEE 
+WHERE SALARY NOT BETWEEN 4000000 AND 6000000; -- 17행
 
+/* 날짤 비교에 더 많이 사용!!! */
+-- EMPLOYEE 테이블에서
+-- 2010년대(2010.01.01 ~ 2019.12.31)에
+-- 입사한 사원의 이름, 입사일 조회
+SELECT EMP_NAME , HIRE_DATE 입사일
+FROM EMPLOYEE 
+WHERE HIRE_DATE BETWEEN 
+TO_DATE('2010.01.01', 'YYYY.MM.DD') AND 
+TO_DATE('2019.12.31', 'YYYY.MM.DD'); -- 10행
+-------------------------------------------------
+/* 일치하는 값만 조회 */
+-- 부서코드가 'D5', 'D6', 'D9'인 사원의
+-- 사번, 이름, 부서코드 조회
+SELECT EMP_ID , EMP_NAME , DEPT_CODE 부서코드
+FROM EMPLOYEE 
+WHERE DEPT_CODE = 'D5' OR DEPT_CODE = 'D6' OR DEPT_CODE ='D9'; -- 12행
 
+/* 컬럼명 IN (값1, 값2, 값3...)
+ * -컬럼 값이 IN () 안에 존재한다면 TRUE
+ * == 연속으로 OR 연산을 작성한 것과 같은 효과
+ */
+-- 위 SQL에서 OR > IN으로 변경
+SELECT EMP_ID , EMP_NAME , DEPT_CODE 부서코드
+FROM EMPLOYEE 
+WHERE DEPT_CODE IN('D5','D6','D9'); -- 12행
+
+/* 컬럼명 NOT IN (값1, 값2, 값3...)
+ * -컬럼 값이 IN () 안에 존재한다면 FALSE
+ * ==> 값이 포함되지 않는 행만 조회
+ */
+SELECT EMP_ID , EMP_NAME , DEPT_CODE 부서코드
+FROM EMPLOYEE 
+WHERE DEPT_CODE NOT IN('D5','D6','D9'); -- 9행
+-- DEPT_CODE가 NULL인 사원 포함 X
+
+/* DEPT_CODE가 NULL인 사원 포함 */
+-- 부서 코드가 'D5','D6','D9' 아닌 사원만 조회
+-- + NULL인 사원도 포함
+SELECT EMP_ID , EMP_NAME , DEPT_CODE 부서코드
+FROM EMPLOYEE 
+WHERE DEPT_CODE NOT IN('D5','D6','D9') OR DEPT_CODE IS NULL; -- 11행
+-------------------------------------------------
+/* *** LIKE(같은, 비슷한) ***
+ * -비교하려는 값이 특정한 패턴을 만족하면 조회하는 연산자
+ * 
+ * [작성법]
+ * WHERE 컬럼명 LIKE '패턴'
+ * 
+ * [패턴에 사용되는 기호(와일드카드)]
+ * 
+ * 1) '%' (포함) 
+ * '%A' : A로 끝나는 문자열인 경우 TRUE -> 앞쪽에는 어떤 문자열이든 관계 없음(빈칸 가능)
+ * 'A%' : A로 시작하는 문자열인 경우 TRUE
+ * '%A%' : A를 포함한 문자열인 경우 TRUE
+ * 
+ * 2) '_' (글자수, _1개 당 1글자)
+ * ___ : 문자열이 3글자인 경우 TRUE
+ * A___ : A로 시작하고 뒤에 3글자인 경우 TRUE
+ * 		EX) ABCE (O), ABCDE(X)
+ * ___A : 앞에 3글자, 마지막은 A로 끝나는 경우 TRUE
+ */
+
+-- EMPLOYEE 테이블에서
+-- 성이 '전'씨인 사원 찾기
+SELECT EMP_NAME 
+FROM EMPLOYEE 
+WHERE EMP_NAME LIKE '전%'; -- 전형돈, 전지연
+
+-- 이름이 '수'로 끝나는 사원 찾기
+SELECT EMP_NAME
+FROM EMPLOYEE 
+WHERE EMP_NAME LIKE '%수'; -- 방명수
+
+-- 이름에 '하'가 포함된 사원 찾기
+SELECT EMP_NAME
+FROM EMPLOYEE 
+WHERE EMP_NAME LIKE '%하%'; -- 4행
+
+-- 전화번호가 010으로 시작하는 사원의
+-- 이름, 전화번호 조회
+SELECT EMP_NAME, PHONE 
+FROM EMPLOYEE 
+WHERE PHONE LIKE '010%'; -- 17행
+
+SELECT EMP_NAME, PHONE 
+FROM EMPLOYEE 
+WHERE PHONE LIKE '010________'; -- 17행
+
+-- EMAIL 컬럼에서 @ 앞에 아이디 글자 수가 5글자인 사원의
+-- 사번, 이름, 이메일 조회
+SELECT EMP_ID , EMP_NAME , EMAIL 
+FROM EMPLOYEE 
+WHERE EMAIL LIKE '_____@%'; -- 4행
+
+-- EMAIL 아이디 중 '_' 앞 글자수가 3글자인 사원의
+-- 사번, 이름, 이메일 조회
+SELECT EMP_ID , EMP_NAME , EMAIL 
+FROM EMPLOYEE 
+WHERE EMAIL LIKE '____%'; -- 전체 조회
+--> EMAIL이 4글자 이상이면 조회!! 라는 의미로 해석됨
+
+/* 발생한 문제 : "구분자"로 사용하려던 '_'가 
+ * LIKE의 와일드카드 '_'로 해석되면서 문제 발생 
+ * 
+ * [해결 방법]
+ * -LIKE ESCAPE OPTION 이용
+ * 	-> 지정된 특수문자 뒤 '딱 한 글자'를
+ * 		 와일드카드가 아닌 단순 문자열로 인식시키는 옵션
+ * 
+ * [작성법]
+ * WHERE LIKE '___#_' ESCAPE '#' --> #, @ 원하는 특수문자 사용...
+ * --> # 바로 뒤 '_'는 와일드카드가 아니고 단순 문자열로 인식
+ */
+SELECT EMP_ID , EMP_NAME , EMAIL 
+FROM EMPLOYEE 
+WHERE EMAIL LIKE '___#_%' ESCAPE '#'; -- 12행
+-------------------------------------------------
 
 
 
