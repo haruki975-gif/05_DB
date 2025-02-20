@@ -186,6 +186,178 @@ WHERE HIRE_DATE
 			AND TO_DATE('2019-12-31', 'YYYY-MM-DD')
 ORDER BY 입사일 DESC;
 
+--EXTRACT()으로 감싸기
+SELECT EMP_ID , EMP_NAME , HIRE_DATE 입사일
+FROM EMPLOYEE 
+WHERE EXTRACT(YEAR FROM HIRE_DATE) 
+			BETWEEN 2010 AND 2019
+ORDER BY 입사일 DESC;
+-----------------------------------------------------------------------------
+/* <형변환(Parsing) 함수> */
+-- 문자형(CHAR, VARCHAR2) <-> 숫자(NUMBER)
+-- 문자형(CHAR, VARCHAR2) <-> 날짜(DATE)
+-- 숫자(NUMBER) --> 날짜(DATE)
+
+/* TO_DATE(문자열 | 숫자 [, 포맷])
+ * -문자열 또는 숫자를 날짜로 변환
+ * 
+ * [포맷 종류]
+ * YY		: 연도(짧게, 25년도)
+ * YYYY : 연도(길게, 2025년도)
+ * RR		: 연도(짧게, 25년도)
+ * RRRR : 연도(길게, 2025년도)
+ * 
+ * MM	: 월
+ * DD : 일
+ * 
+ * AM/PM : 오전/오후 (둘 중 아무거나 작성 가능)
+ * 
+ * HH 	: 시간(12시간 표기법)
+ * HH24 : 시간(24시간 표기법)
+ * MI : 분
+ * SS : 초
+ * 
+ * DAY : 요일(전체, 월요일, MONDAY)
+ * DY  : 요일(약어, 월, MON)
+ */
+
+-- . - / : 등의 날짜 표시 기호와 
+-- 기본적인 날짜 작성 순서는 포맷 인식을 안 해도 해석 가능!!!
+SELECT 
+	'2025-02-20' AS 문자열,
+	TO_DATE('2025-02-20') AS 날짜
+FROM DUAL;
+
+-- 일반적인 날짜 패턴이 아니거나
+-- 영어 외 문자 포함 시(한글 등) 포맷 지정 필수!!!
+SELECT 
+	'2025-02-21 17:50:00 (금)' AS 문자열,
+	TO_DATE('2025-02-21 17:50:00 (금)', 'YYYY-MM-DD HH24:MI:SS (DY)') AS 날짜
+FROM DUAL;
+
+SELECT 
+	'16:20:43 목요일 02-20/2025' AS 문자열,
+	TO_DATE('16:20:43 목요일 02-20/2025', 'HH24:MI:SS DAY MM-DD/YYYY') AS 날짜
+FROM DUAL;
+
+--한글(년,월,일)은
+--DBMS 시스템에 등록된 날짜 포맷이 아니라 인식 불가
+--> 포맷이 아니라 모양 그대로 인식할 수 있게 "" 추가
+SELECT 
+	'2025년 2월 20일' AS 문자열,
+	TO_DATE('2025년 2월 20일', 'YYYY"년" MM"월" DD"일"') AS 날짜
+FROM DUAL;
+
+--숫자 ->날짜 변환 가능
+SELECT 
+	20250220 AS 숫자,
+	TO_DATE(20250220) 
+FROM DUAL;
+-----------------------------------------------------------------------------
+/* TO_CHAR(숫자)
+ * -숫자, 날짜를 문자열로 변환
+ */
+
+/* 숫자 -> 문자
+ * 1) 9 : 숫자 1칸을 의미, 오른쪽 정렬
+ * 2) 0 : 숫자 1칸을 의미, 오른쪽 정렬, 빈칸을 0으로 채움
+ * 3) L : 현재 시스템 또는 DB 설정 국가의 화폐 기호
+ * 4) , : 숫자 자릿수 구분
+ */
+
+-- 숫자 -> 문자열
+SELECT 1234, TO_CHAR(1234) FROM DUAL;
+
+-- 문자열 9칸 지정, 오른쪽 정렬
+SELECT 1234, TO_CHAR(1234, '999999999') FROM DUAL;
+
+-- 문자열 9칸 지정, 오른쪽 정렬, 빈칸 0으로 채우기
+SELECT 1234, TO_CHAR(1234, '000000000') FROM DUAL;
+
+-- 변경할 숫자보다 칸 수가 적을 때
+--> 모든 문자가 #으로 변환되어 출력
+--> 오류 의미
+SELECT 1234, TO_CHAR(1234, '000') FROM DUAL; -- ####
+
+-- ,를 이용한 자릿수 구분 + 화폐기호
+-- TRIM() : 양쪽 공백 제거
+SELECT 100000000, TO_CHAR(10000000, 'L999,999,999') FROM DUAL;
+
+-- 모든 사원의 연봉 조회
+-- 단, 연봉은 '\999,999,999' 형태로 출력
+-- 연봉 내림차순으로 조회
+SELECT EMP_NAME , TRIM(TO_CHAR(SALARY * 12, 'L999,999,999')) AS 연봉
+FROM EMPLOYEE 
+ORDER BY SALARY * 12 DESC;
+
+/* (참고)
+ * -문자열 정렬 기준은 글자수, 글자 순서 등에 영향이 있기 때문에
+ *  정렬 시 생각을 잘 해봐야 함
+ * 
+ * -숫자는 정렬 기준으로 사용하기 좋다!
+ * -날짜는 정렬 기준으로 사용하기 좋다!
+ * (크고, 작다의 기준이 단순하고 명확해서)
+ */
+-----------------------------------------------------------------------------
+/* 날짜 -> 문자열 */
+-- 오늘 날짜를 'YYYY/MM/DD DAY' 문자열로 변경
+SELECT 
+	CURRENT_DATE,
+	TO_CHAR(SYSDATE, 'YYYY/MM/DD DAY') AS "오늘 날짜"
+FROM DUAL;
+
+--오늘 날짜를 '2025.02.20 (목) 오후 04:27:20' 변환
+SELECT 
+	CURRENT_DATE,
+	TO_CHAR(SYSDATE, 'YYYY.MM.DD (DY) AM HH:MI:SS') AS "오늘 날짜"
+FROM DUAL;
+
+--오늘 날짜를 '2025년 2월 20일 (목) 오후 04시 30분 20초' 변환
+SELECT 
+	CURRENT_DATE,
+	TO_CHAR(SYSDATE, 'YYYY"년" MM"월" DD"일" (DY) PM HH"시" MI"분" SS"초"')  AS "오늘 날짜"
+FROM DUAL;
+
+SELECT 
+	CURRENT_DATE,
+	TO_CHAR(SYSDATE, 'RRRR"년" MM"월" DD"일" (DY) PM HH"시" MI"분" SS"초"')  AS "오늘 날짜"
+FROM DUAL;
+
+
+/* R과 Y의 차이점
+ * 
+ * YY : 연도 상관 없이 현재 세기로 표기 
+ * (현재 세기 == 21세기(21C) == 2000년대)
+ * 
+ * RR : 50을 기준으로 
+ * 50 미만이면 현재 세기(2000년대), 
+ * 50 이상이면 이전 세기(1900년대)
+ * 
+ */
+
+-- 차이 X
+SELECT 
+	TO_DATE('25/02/20', 'YY/MM/DD') AS YY, --2025
+	TO_DATE('25/02/20', 'RR/MM/DD') AS RR  --2025
+FROM DUAL;
+
+-- 차이 O, (50년을 기준으로 차이점이 보임)
+SELECT 
+	TO_DATE('50/02/20', 'YY/MM/DD') AS YY, --2050
+	TO_DATE('50/02/20', 'RR/MM/DD') AS RR  --1950
+FROM DUAL;
+-----------------------------------------------------------------------------
+/* TO_NUMBER(문자열 [, 패턴]) : 문자열 -> 숫자 */
+SELECT '123456789', TO_NUMBER('123456789') FROM DUAL;
+SELECT '$1,500', TO_NUMBER('$1,500', '$9,999') AS 숫자 FROM DUAL;
+
+
+
+
+
+
+
+
 
 
 
