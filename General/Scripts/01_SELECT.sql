@@ -221,29 +221,103 @@ SELECT
 	DISTINCT DEPT_CODE
 FROM 
 	EMPLOYEE; -- 7행 조회(중복X인 경우만)
+------------------------------------------------
 
+/* [SELECT 작성법 - 2]
+ * 
+ * 3) SELECT 컬럼명 || 리터럴, ... -- 열 선택
+ * 1) FROM 테이블명 -- 테이블 선택
+ * 2) WHERE 조건식; -- 행 선택
+ */
 
+/* *** WHERE 절 ***
+ * -테이블에서 조건을 충족하는 행을 조회할 때 사용
+ * -WHERE 절에는 조건식(결과가 T/F)만 작성 가능
+ * -비교 연산자 : >, <, >=, <=, =(같다), !=, <>(같지 않다)
+ * -논리 연산자 : AND, OR, NOT
+ */
+-- EMPLOYEE 테이블에서
+-- 급여가 400만원을 초과하는 사원의
+-- 사번, 이름, 급여를 조회
+SELECT 
+	EMP_ID 사번, EMP_NAME 이름, SALARY 급여
+FROM 
+	EMPLOYEE
+WHERE
+	SALARY > 4000000; -- 8행
 
+-- EMPLOYEE 테이블에서
+-- 급여가 500만원 이하인 사원의
+-- 사번, 이름, 급여, 부서코드, 직급코드를 조회
+SELECT 
+	EMP_ID 사번, EMP_NAME 이름, SALARY 급여, DEPT_CODE 부서코드, JOB_CODE 직급코드
+FROM
+	EMPLOYEE 
+WHERE 
+	SALARY <= 5000000; -- 19행
 
+-- EMPLOYEE 테이블에서
+-- 연봉이 5000만원 이하인 사원의
+-- 이름, 연봉 조회
+SELECT EMP_NAME, SALARY * 12 AS 연봉
+FROM EMPLOYEE 
+WHERE	(SALARY * 12) <= 50000000; -- 15행
 
+-- 이름이 '노옹철'인 사원의
+-- 사번, 이름, 전화번호 조회
+SELECT EMP_ID, EMP_NAME, PHONE 
+FROM EMPLOYEE 
+WHERE EMP_NAME = '노옹철';
 
+-- 부서코드(DEPT_CODE)가 'D9'이 아닌 사원의
+-- 이름, 부서코드 조회
+SELECT EMP_NAME, DEPT_CODE 
+FROM EMPLOYEE 
+WHERE DEPT_CODE <> 'D9'; -- 18행
+--WHERE DEPT_CODE != 'D9';
 
-
-
-
-
-
+-- 부서코드(DEPT_CODE)가 'D9'이 아닌 사원의
+-- 이름, 부서코드 조회
+SELECT EMP_NAME, DEPT_CODE 
+FROM EMPLOYEE 
+WHERE DEPT_CODE = 'D9'; -- 3행
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+-- 전체 : 23행, DP : 3행, DP 아님 : 18행
+--> 2행은 어디로?
+------------------------------------------------
+/* *** NULL ***
+ * 
+ * -DB에서 NULL : 빈칸 (저장된 값 없음)
+ * 
+ * -NULL은 비교 대상이 없기 때문에
+ *  =, != 등의 비교 연산 결과가 무조건 FALSE
+ */
+
+/* *** NULL 비교 연산 ***
+ * 
+ * 1) 컬럼명 IS NULL : 해당 컬럼 값이 NULL이면 TRUE 반환
+ * 2) 컬럼명 IS NOT NULL : 해당 컬럼 값이 NULL이 아니면 TRUE 반환
+ * 												== 컬럼에 값이 존재하면 TRUE
+ * (컬럼 값의 존재 유무를 비교하는 연산)
+ */
+
+-- EMPLOYEE 테이블에서
+-- 부서코드(DEPT_CODE)가 없는 사원의
+-- 사번, 이름, 부서코드 조회
+SELECT EMP_ID , EMP_NAME , DEPT_CODE 
+FROM EMPLOYEE 
+WHERE DEPT_CODE IS NULL; -- 2행
+-- DEPT_CODE = NULL <= 안됨
+
+-- BONUS가 존재하는 사원의
+-- 이름, 보너스 조회
+SELECT EMP_NAME , BONUS 
+FROM EMPLOYEE 
+WHERE BONUS IS NOT NULL; -- 9행
+
+
+
+
 
 
 
