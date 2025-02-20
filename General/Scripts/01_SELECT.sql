@@ -487,8 +487,48 @@ FROM EMPLOYEE
 WHERE EMAIL LIKE '___#_%' ESCAPE '#'; -- 12행
 -------------------------------------------------
 
+/* [SELECT 작성법 - 3]
+ * 
+ * 3) SELECT 컬럼명...   -- 열 선택
+ * 1) FROM 	 테이블명    -- 테이블 선택
+ * 2) WHERE  조건식		   -- 행 선택
+ * 4) ORDER BY 정렬 기준 -- 조회 결과 정렬
+ * 
+ * *** ORDER BY 절 ***
+ * -SELECT의 조회 결과 집합(RESULT SET)을
+ *  원하는 순서로 정렬할 때 사용하는 구문
+ * 
+ * -작성법
+ * ORDER BY 컬럼명 | 별칭 | 컬럼순서 | 함수
+ * 					[ASC / DESC] (오름차순 / 내림차순)
+ * 					[NULLS FIRST / NULLS LAST] (NULL 데이터 위치 지정)
+ * 
+ * ** 중요!!! **
+ * ORDER BY절은 해당 SELECT문 제일 마지막에만 수행!!!
+ * 
+ * --오름차순(ASCENDING) : 점점 커지는 순서로 정렬 (1 => 10 / A => Z / 가 => 하 / 과거 => 미래)
+ * --내림차순(DESCENDING) : 점점 작아지는 순서로 정렬 (10 => 1 / Z => A / 하 => 가 / 미래 => 과거)
+ */
 
+-- EMPLOYEE 테이블의 모든 사원을
+-- 이름 오름차순으로 정렬하여 이름 조회
+SELECT EMP_NAME 
+FROM EMPLOYEE 
+ORDER BY EMP_NAME ASC;
 
+-- 급여 내림차순으로 정렬하여 이름, 급여 조회
+SELECT EMP_NAME, SALARY 
+FROM EMPLOYEE 
+ORDER BY SALARY DESC;
+
+-- WHERE 절 추가
+-- 부서코드가 D5 D6 D9인 사원의
+-- 사번, 이름, 급여, 부서코드를
+-- 급여 내림차순으로 조회
+SELECT EMP_ID , EMP_NAME , SALARY , DEPT_CODE 
+FROM EMPLOYEE 
+WHERE DEPT_CODE IN('D5','D6','D9')
+ORDER BY SALARY DESC; -- 12행
 
 
 
