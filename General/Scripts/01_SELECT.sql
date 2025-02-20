@@ -314,15 +314,40 @@ WHERE DEPT_CODE IS NULL; -- 2행
 SELECT EMP_NAME , BONUS 
 FROM EMPLOYEE 
 WHERE BONUS IS NOT NULL; -- 9행
+------------------------------------------------
+/* *** 논리 연산자(AND/OR) ***
+ * 
+ * -두 조건식의 결과에 따라 새로운 결과를 만드는 연산
+ * 
+ * -AND(그리고) : 두 연산자의 결과가 TRUE일 때만 최종 결과 TRUE
+ * 	-> 두 조건을 모두 만족하는 행만 결과 집합(RESULT SET)에 포함
+ * 
+ * -OR(또는) : 두 연산자의 결과가 FALSE일 때만 최종 결과 FALSE
+ * 	-> 두 조건 중 하나라도 만족하는 행을 결과 집합(RESULT SET)에 포함
+ * 
+ * -우선 순위 : AND > OR
+ */
+-- EMPLOYEE 테이블에서
+-- 부서코드가 'D6'인 사원 중
+-- 급여가 400만원을 초과하는 사원의
+-- 이름, 부서코드, 급여 조회
+SELECT EMP_NAME, DEPT_CODE, SALARY 
+FROM EMPLOYEE 
+WHERE DEPT_CODE = 'D6' AND SALARY > 4000000; -- 2명
 
+-- EMPLOYEE 테이블에서
+-- 급여가 300만원 이상, 500만 미만인 사원의
+-- 사번, 이름, 급여 조회
+SELECT EMP_ID , EMP_NAME , SALARY 
+FROM EMPLOYEE 
+WHERE SALARY >= 3000000 AND SALARY < 5000000; -- 16행
 
-
-
-
-
-
-
-
+-- EMPLOYEE 테이블에서
+-- 급여가 300만원 미만 또는 500만원 이상인 사원의
+-- 사번, 이름, 급여 조회
+SELECT EMP_ID , EMP_NAME , SALARY 
+FROM EMPLOYEE 
+WHERE SALARY < 3000000 OR SALARY >= 5000000; -- 7행
 
 
 
