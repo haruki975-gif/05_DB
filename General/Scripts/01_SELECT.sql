@@ -530,6 +530,93 @@ FROM EMPLOYEE
 WHERE DEPT_CODE IN('D5','D6','D9')
 ORDER BY SALARY DESC; -- 12행
 
+-- 부서코드가 D5 D6 D9인 사원의
+-- 사번, 이름, 급여, 부서코드를
+-- 부서코드 오름차순으로 조회
+SELECT EMP_ID , EMP_NAME , SALARY , DEPT_CODE 
+FROM EMPLOYEE 
+WHERE DEPT_CODE IN('D5','D6','D9')
+ORDER BY DEPT_CODE ASC;
+-------------------------------------------------
+/* 별칭을 이용하여 정렬하기
+ * 
+ * -ORDER BY절은 제일 마지막에 해석된다!!!
+ * -ORDER BY절보다 먼저 해석되는 
+ *  SELECT절 별칭을 ORDER BY절에서 인식할 수 있다!!!
+ * 
+ * ??그럼 SELECT절보다 먼저 해석되는
+ *   WHERE절에서 별칭 사용이 가능할까?
+ * 	 -> 안됨!!!
+ */ 
+
+-- 사번, 이름, 연봉을 (컬럼명 별칭 적용하기)
+-- 연봉 오름차순으로 정렬
+SELECT EMP_ID 사번, EMP_NAME 이름, SALARY * 12 AS 연봉
+FROM EMPLOYEE 
+ORDER BY 연봉 ASC;  -- 별칭 이용
+-- SALARY * 12 ASC; -- 연봉을 구하는 식 이용
+
+-- 연봉을 5천만원 이상 받는 사원의
+-- 사번, 이름, 연봉 조회
+-- 연봉 오름차순으로 정렬
+SELECT EMP_ID 사번, EMP_NAME 이름, SALARY * 12 연봉
+FROM EMPLOYEE 
+WHERE SALARY * 12 >= 50000000
+--연봉 >= 50000000 --> 오류 발생! 아직 별칭 인식 전
+ORDER BY 연봉 ASC; -- 8행
+-------------------------------------------------
+/* 컬럼 순서를 이용하여 정렬하기
+ * 
+ * -SELECT절이 해석되면 조회하려는 컬럼이 지정되면서 컬럼의 순서도 같이 지정된다!!
+ *  -> ORDER BY절에서 컬럼 순서 이용 가능(권장 X)
+ */
+
+-- 급여가 400만 이상 600만 이하인 사원의
+-- 사번, 이름, 급여를 
+-- 급여 내림차순으로 조회
+SELECT EMP_ID , EMP_NAME , SALARY 
+FROM EMPLOYEE 
+WHERE SALARY BETWEEN 4000000 AND 6000000
+ORDER BY 3 DESC;
+-------------------------------------------------
+/* SELECT절에 작성되지 않은 컬럼을 이용해 정렬하기 */
+
+-- 모든 사원의 사번, 이름을
+-- 부서코드 오름차순으로 조회
+SELECT EMP_ID , EMP_NAME 
+FROM EMPLOYEE 
+ORDER BY DEPT_CODE ASC;
+
+-- ORDER BY절 해석 전 SELECT, FROM절이 모두 해석되어 있기 때문에
+-- SELECT절에 없는 컬럼을 작성해도 정렬이 가능하다!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
