@@ -180,15 +180,19 @@ ORDER BY DEPT_CODE ASC;
 SELECT JOB_CODE, COUNT(BONUS)
 FROM EMPLOYEE
 GROUP BY JOB_CODE
-HAVING COUNT(BONUS) > 0
+--HAVING COUNT(BONUS) > 0
 ORDER BY JOB_CODE ASC;
+--> 전체를 일단 그룹으로 만들어서 BONUS 받는 사람들을 카운트하는 것이
+--  0이라는 결과가 조회되기 때문에
+--  통계 자료 측면에 더 좋다!!!
 
 -- 3.EMPLOYEE 테이블에서 
 -- 부서별 80년대생의 급여 평균이 400만 이상인 부서를 조회하여
 -- 부서 코드 오름차순으로 정렬하세요
-SELECT DEPT_CODE, FLOOR(AVG(SALARY))  
+SELECT DEPT_CODE, FLOOR(AVG(SALARY)) AS "급여 평균"
 FROM EMPLOYEE
-WHERE SUBSTR(EMP_NO, 1, 2) BETWEEN 80 AND 89
+--WHERE SUBSTR(EMP_NO, 1, 2) BETWEEN 80 AND 89
+WHERE SUBSTR(EMP_NO, 1, 1) = '8'
 GROUP BY DEPT_CODE
 HAVING AVG(SALARY) >= 4000000 
 ORDER BY DEPT_CODE ASC;
@@ -258,21 +262,66 @@ WHERE DEPT_CODE IS NULL;
 -- UNION : 여러개의 쿼리 결과를 하나로 합치는 연산자
 -- 중복된 영역을 제외하여 하나로 합친다.
 
+--부서코드가 'D5'인 사원의 이름, 부서코드, 직급코드 조회
+SELECT EMP_NAME, DEPT_CODE, JOB_CODE 
+FROM EMPLOYEE 
+WHERE DEPT_CODE = 'D5'
+
+UNION -- 합집합 (중복되는 행 한 번만 출력)
+
+--직급코드가 'J7'인 사원의 이름, 부서코드, 직급코드 조회
+SELECT EMP_NAME , DEPT_CODE , JOB_CODE 
+FROM EMPLOYEE 
+WHERE JOB_CODE = 'J7';
+
+--> 합집합의 결과는 OR 연산과 같다!
+SELECT EMP_NAME, DEPT_CODE, JOB_CODE FROM EMPLOYEE
+WHERE DEPT_CODE = 'D5' OR JOB_CODE = 'J7';
+
 
 
 -- INTERSECT : 여러개의 SELECT한 결과에서 공통 부분만 결과로 추출 (교집합)
+SELECT EMP_NAME, DEPT_CODE, JOB_CODE 
+FROM EMPLOYEE 
+WHERE DEPT_CODE = 'D5'
 
+INTERSECT -- 합집합 (중복되는 행 한 번만 출력) --> 박나라, 윤은해
+
+SELECT EMP_NAME , DEPT_CODE , JOB_CODE 
+FROM EMPLOYEE 
+WHERE JOB_CODE = 'J7';
+
+--> 교집합의 결과는 AND 연산과 같다!
+SELECT EMP_NAME, DEPT_CODE, JOB_CODE FROM EMPLOYEE 
+WHERE DEPT_CODE ='D5' AND JOB_CODE ='J7';
 
 
 
 -- UNION ALL : 여러개의 쿼리 결과를 하나로 합치는 연산자
--- UNION과의 차이점은 중복영역을 모두 포함시킨다. (합집합 +  교집합)
+-- UNION과의 차이점은 중복영역을 모두 포함시킨다. (합집합 + 교집합)
+SELECT EMP_NAME, DEPT_CODE, JOB_CODE 
+FROM EMPLOYEE 
+WHERE DEPT_CODE = 'D5'
+
+UNION ALL -- 10행 모두 출력(중복 제거 X)
+
+SELECT EMP_NAME , DEPT_CODE , JOB_CODE 
+FROM EMPLOYEE 
+WHERE JOB_CODE = 'J7';
 
 
 
--- MINUS : 선행 SELECT 결과에서 다음 SELECT 결과와 겹치는 부분을 제외한 나머지 부분만 추출(차집합)
--- 부서 코드 D5 중 급여가 400만 초과인 직원 제외
+-- MINUS : 선행 SELECT 결과에서 다음 SELECT 결과와 겹치는 부분을 제외한 
+-- 나머지 부분만 추출(차집합)
+SELECT EMP_NAME, DEPT_CODE, JOB_CODE 
+FROM EMPLOYEE 
+WHERE DEPT_CODE = 'D5'
 
+MINUS -- 박나라, 윤은해 제외
+
+SELECT EMP_NAME , DEPT_CODE , JOB_CODE 
+FROM EMPLOYEE 
+WHERE JOB_CODE = 'J7';
 
 
 
