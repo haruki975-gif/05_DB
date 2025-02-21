@@ -13,7 +13,7 @@
 --              하나의 그룹으로 묶음
 -- GROUP BY 컬럼명 | 함수식, ....
 -- 여러개의 값을 묶어서 하나로 처리할 목적으로 사용함
--- 그룹으로 묶은 값에 대해서 SELECT절에서 그룹함수를 사용함
+-- 그룹으로 묶은 값에 대해서 SELECT절에서 "그룹 함수"를 사용함
 
 -- 그룹 함수는 단 한개의 결과 값만 산출하기 때문에 그룹이 여러 개일 경우 오류 발생
 -- 여러 개의 결과 값을 산출하기 위해 그룹 함수가 적용된 그룹의 기준을 ORDER BY절에 기술하여 사용
@@ -21,25 +21,55 @@
 
 
 -- EMPLOYEE 테이블에서 부서코드, 부서(그룹) 별 급여 합계 조회
+SELECT DEPT_CODE, SUM(SALARY)
+FROM EMPLOYEE
+GROUP BY DEPT_CODE;
 
+--1) EMPLOYEE 테이블에서(23행)
+--2) DEPT_CODE가 같은 행을 그룹으로 만들어라
+--3) 묶은 그룹의 DEPT_CODE와 각 그룹에 속한 인원의 급여 합 조회
 
 
 -- EMPLOYEE 테이블에서 
 -- 부서코드, 부서 별 급여의 합계, 부서 별 급여의 평균(정수처리), 인원 수를 조회하고 
 -- 부서 코드 순으로 정렬
-
+SELECT 
+	DEPT_CODE,
+	SUM(SALARY) AS "급여 합",
+	FLOOR(AVG(SALARY)) AS "급여의 평균",
+	COUNT(*) AS "인원 수"
+FROM EMPLOYEE
+GROUP BY DEPT_CODE
+ORDER BY DEPT_CODE ASC;
 
 
 -- EMPLOYEE 테이블에서 
 -- 부서코드와 부서별 보너스를 받는 사원의 수를 조회하고 
 -- 부서코드 순으로 정렬
-
+SELECT 
+	DEPT_CODE,
+	COUNT(BONUS) AS BONUS --NULL빼고 카운트
+FROM EMPLOYEE
+GROUP BY DEPT_CODE
+ORDER BY DEPT_CODE ASC;
 
 
 -- EMPLOYEE 테이블에서
 -- 성별과 성별 별 급여 평균(정수처리), 급여 합계, 인원 수 조회하고
 -- 인원수로 내림차순 정렬
-
+SELECT 
+	DECODE(
+		SUBSTR(EMP_NO, 8, 1), 
+			1, '남자',
+			2, '여자'
+	) AS 성별,
+	FLOOR(AVG(SALARY)) AS "급여 평균",
+	SUM(SALARY) AS "급여 합계",
+	COUNT(*) AS "인원 수" 
+FROM EMPLOYEE
+GROUP BY
+	DECODE(SUBSTR(EMP_NO, 8, 1), 1, '남자', 2, '여자')
+ORDER BY "인원 수" DESC;
 
 
 -- * WHERE절 GROUP BY절을 혼합하여 사용
@@ -47,10 +77,19 @@
 
 
 -- EMPLOYEE 테이블에서 부서코드가 'D5', 'D6'인 부서의 평균 급여 조회
-
+SELECT 
+	DEPT_CODE , FLOOR(AVG(SALARY)) AS "평균 급여" 
+FROM EMPLOYEE
+WHERE DEPT_CODE IN('D5', 'D6')
+GROUP BY DEPT_CODE;
 
 -- EMPLOYEE 테이블에서 직급 별 2010년도 이후 입사자들의 급여 합을 조회
-
+SELECT
+	JOB_CODE, SUM(SALARY) AS "급여 합"
+FROM EMPLOYEE
+WHERE 
+	EXTRACT(YEAR FROM HIRE_DATE) >= 2010 
+GROUP BY JOB_CODE;
 
 
 
@@ -63,28 +102,66 @@
 
 -- EMPLOYEE 테이블에서 부서 별로 같은 직급인 사원의 급여 합계를 조회하고
 -- 부서 코드 오름차순으로 정렬
-
+SELECT DEPT_CODE, JOB_CODE, SUM(SALARY)
+FROM EMPLOYEE
+GROUP BY DEPT_CODE, JOB_CODE -- 1) 부서 그룹   2) 직급
+ORDER BY DEPT_CODE ASC;
 
 -- EMPLOYEE 테이블에서 부서 별로 급여 등급이 같은 직원의 수를 조회하고
 -- 부서코드, 급여 등급 오름차순으로 정렬
-
+SELECT 
+	DEPT_CODE, SAL_LEVEL,	COUNT(*)
+FROM EMPLOYEE
+GROUP BY DEPT_CODE, SAL_LEVEL
+ORDER BY DEPT_CODE ASC, SAL_LEVEL ASC;
 
 
 
 
 --------------------------------------------------------------------------------------------------------------------------
 
--- * HAVING 절 : 그룹함수로 구해 올 그룹에 대한 조건을 설정할 때 사용
--- HAVING 컬럼명 | 함수식 비교연산자 비교값
+/* WHERE 절
+ * -FROM절에서 지정된 테이블의 전체 행 중
+ *  조건에 맞는 행만 선택
+ */
 
--- 부서별 평균가 급여 3000000원 이상인 부서를 조회하여 부서코드 오름차순으로 정렬
+-- * HAVING 절 :
+-- 그룹함수로 구해 올 그룹에 대한 조건을 설정할 때 사용
+/*
+ * GROUP BY를 통해서 만들어진 그룹 중
+ * 조건에 맞는 그룹만 선택
+ */
+
+-- HAVING 컬럼명 | 그룹함수식 비교연산자 비교값
+
+-- 부서별 평균 급여 3,500,000원 이상인 부서를 조회하여 부서코드 오름차순으로 정렬
+
+/* 1) WHERE절에 조건 설정 */
+SELECT DEPT_CODE, FLOOR(AVG(SALARY))
+FROM EMPLOYEE
+WHERE SALARY >= 3500000
+GROUP BY DEPT_CODE
+ORDER BY DEPT_CODE ASC;
+--개인 급여가 350만 이상인 사람들만 모아서
+--부서별로 그룹을 나누고 평균을 구한 것 -> 요구사항과 다름!
+
+/* 2) HAVING절에 조건 설정 */
+SELECT DEPT_CODE, FLOOR(AVG(SALARY))
+FROM EMPLOYEE
+GROUP BY DEPT_CODE
+HAVING AVG(SALARY) >= 3500000
+ORDER BY DEPT_CODE ASC;
+--나눠진 부서 그룹별로 평균을 구했을 때
+--급여 평균이 350만 이상인 부서만 조회
 
 
-
--- 부서별 그룹의 급여 합계 중 9백만원을 초과하는 부서코드와 급여 합계 조회
+-- 부서별 그룹의 급여 합계 중 천만원을 초과하는 부서코드와 급여 합계 조회
 -- 부서 코드 순으로 정렬
-
-
+SELECT DEPT_CODE, SUM(SALARY) AS "급여 합계"
+FROM EMPLOYEE
+GROUP BY DEPT_CODE
+HAVING SUM(SALARY) > 10000000
+ORDER BY DEPT_CODE ASC;
 
 
                       
@@ -92,20 +169,30 @@
 
 -- 1. EMPLOYEE 테이블에서 각 부서별 가장 높은 급여, 가장 낮은 급여를 조회하여
 -- 부서 코드 오름차순으로 정렬하세요.
-
+SELECT DEPT_CODE, MAX(SALARY), MIN(SALARY) 
+FROM EMPLOYEE
+GROUP BY DEPT_CODE
+ORDER BY DEPT_CODE ASC;
 
 
 -- 2.EMPLOYEE 테이블에서 각 직급별 보너스를 받는 사원의 수를 조회하여
 -- 직급코드 오름차순으로 정렬하세요
-
-
+SELECT JOB_CODE, COUNT(BONUS)
+FROM EMPLOYEE
+GROUP BY JOB_CODE
+HAVING COUNT(BONUS) > 0
+ORDER BY JOB_CODE ASC;
 
 -- 3.EMPLOYEE 테이블에서 
 -- 부서별 80년대생의 급여 평균이 400만 이상인 부서를 조회하여
 -- 부서 코드 오름차순으로 정렬하세요
-               
-                      
-                      
+SELECT DEPT_CODE, FLOOR(AVG(SALARY))  
+FROM EMPLOYEE
+WHERE SUBSTR(EMP_NO, 1, 2) BETWEEN 80 AND 89
+GROUP BY DEPT_CODE
+HAVING AVG(SALARY) >= 4000000 
+ORDER BY DEPT_CODE ASC;
+-- SUBSTR(EMP_NO, 1, 2) : 주민등록번호 앞 2자리(년도)
 --------------------------------------------------------------------------------------------------------------                     
 
 -- 집계함수(ROLLUP, CUBE)
