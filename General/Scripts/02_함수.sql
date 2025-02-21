@@ -350,14 +350,61 @@ FROM DUAL;
 /* TO_NUMBER(문자열 [, 패턴]) : 문자열 -> 숫자 */
 SELECT '123456789', TO_NUMBER('123456789') FROM DUAL;
 SELECT '$1,500', TO_NUMBER('$1,500', '$9,999') AS 숫자 FROM DUAL;
+-----------------------------------------------------------------------------
+/* NULL : 값이 없음(빈 칸)
+ * NULL 처리 연산 : IS NULL, IS NOT NULL
+ * 
+ * ** NULL 처리 함수 **
+ * 1) NVL(컬럼명, 컬럼값이 NULL인 경우 변경할 값)
+ * -> NULL인 경우 다른 값으로 변경
+ * 
+ * 2) NVL2(컬럼명, NULL이 아닌 경우, NULL인 경우)
+ * -> NULL인 경우, 아닌 경우 나눠서 처리
+ */
 
+-- EMPLOYEE 테이블에서
+-- 사번, 이름, 전화번호 조회
+-- 단, 전화번호가 없으면(NULL) '없음'으로 조회
+SELECT EMP_ID, EMP_NAME, NVL(PHONE, '없음') AS PHONE
+FROM EMPLOYEE;
 
+/* NULL과 산술 연산 수행 시 결과는 무조건 NULL!!!! */
+-- EMPLOYEE 테이블에서
+-- 이름, 급여, 보너스, 급여*보너스 조회
+-- 단, 보너스가 없는 사원은 0으로 조회
+SELECT 
+	EMP_NAME, 
+	SALARY, NVL(BONUS, 0) AS BONUS, 
+	SALARY * NVL(BONUS,0) AS "SALARY*BONUS"
+FROM EMPLOYEE;
 
+-- EMPLOYEE 테이블에서
+-- 사번, 이름, 전화번호 조회
+-- 단, 전화번호가 없으면 '없음'
+-- 전화번호가 있으면 '010********' 형식으로 변경해서 조회
+SELECT 
+	EMP_ID,
+	EMP_NAME,
+	NVL2(PHONE, 
+		RPAD(SUBSTR(PHONE,1,3), LENGTH(PHONE), '*' ), 
+		'없음') AS PHONE  
+FROM EMPLOYEE;
 
+-- RPAD(문자열, 길이, 바꿀 문자)
+--> 문자열 전체에서 오른쪽을 지정된 길이 만큼 바꿀 문자로 변경
+--> (==특정 길이 문자열의 빈칸 채우기)
+-----------------------------------------------------------------------------
+/* 선택 함수
+ * 
+ * -여러 가지 경우에 따라 알맞은 결과를 선택하는 함수
+ * (if, switch와 비슷)
+ */
 
-
-
-
+/* DECODE(컬럼명, 조건1, 결과2, 조건2, 결과2,... [, 아무것도 만족 X])
+ * 
+ * 
+ * 
+ */
 
 
 
