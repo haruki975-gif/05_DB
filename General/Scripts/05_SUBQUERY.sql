@@ -150,6 +150,33 @@ HAVING
 		GROUP BY DEPT_CODE
 	);
 
+-- 부서별 인원수가 3명 이상인 부서의
+-- 부서명, 인원수 조회
+SELECT 
+	DEPT_TITLE, COUNT(*)
+FROM EMPLOYEE
+LEFT JOIN DEPARTMENT ON (DEPT_ID=DEPT_CODE)
+GROUP BY DEPT_TITLE
+HAVING COUNT(*) >= 3;
+
+/* GROUP BY가 사용된 SELECT문의 SELECT절에는
+ * 그룹 함수 또는 GROUP BY에 사용된 컬럼명만 작성 가능
+ */
+
+-- 부서별 인원수가 가장 적은 부서의
+-- 부서명, 인원수 조회
+-- 단, 부서 이름이 없으면 '없음'으로 표시
+SELECT 
+	NVL(DEPT_TITLE, '없음') DEPT_TITLE, COUNT(*)
+FROM EMPLOYEE 
+LEFT JOIN DEPARTMENT ON (DEPT_ID=DEPT_CODE)
+GROUP BY DEPT_TITLE
+HAVING 
+	COUNT(*) = (
+		SELECT MIN(COUNT(*)) FROM EMPLOYEE -- 서브쿼리 결과 : 2
+		GROUP BY DEPT_CODE
+	);
+
 -------------------------------------------------------------------------
 
 -- 2. 다중행 서브쿼리 (MULTI ROW SUBQUERY)
@@ -171,28 +198,102 @@ HAVING
 -- 부서별 최고 급여를 받는 직원의 
 -- 이름, 직급, 부서, 급여를 부서 순으로 정렬하여 조회
 
+-- 1) 부서별 최고 급여 조회
+SELECT MAX(SALARY)
+FROM EMPLOYEE 
+GROUP BY DEPT_CODE;
+
+-- 2) 부서별 최고 급여를 받는 직원 조회
+SELECT EMP_NO, JOB_CODE, DEPT_CODE, SALARY
+FROM EMPLOYEE
+WHERE SALARY IN (
+	SELECT MAX(SALARY) -- 7행
+	FROM EMPLOYEE 
+	GROUP BY DEPT_CODE
+);
 
 
 -- 사수에 해당하는 직원에 대해 조회 
 --  사번, 이름, 부서명, 직급명, 구분(사수 / 직원)
 
 -- 1) 사수에 해당하는 사원 번호 조회
+-- == MANAGER_ID 컬럼에 사번이 작성된 사원
+-- DISTINCT : 컬럼값 중복 제거
+SELECT DISTINCT MANAGER_ID 
+FROM EMPLOYEE 
+WHERE MANAGER_ID IS NOT NULL;
 
+-- 2) 직원의 사번, 이름, 부서명, 직급명 조회
+SELECT 
+	EMP_ID, EMP_NAME, 
+	NVL(D.DEPT_TITLE,'없음') DEPT_TITLE, J.JOB_NAME 
+FROM EMPLOYEE E
+LEFT JOIN DEPARTMENT D ON (D.DEPT_ID = E.DEPT_CODE)
+JOIN JOB J ON (J.JOB_CODE=E.JOB_CODE);
 
--- 2) 직원의 사번, 이름, 부서명, 직급 조회
-
-
--- 3) 사수에 해당하는 직원에 대한 정보 추출 조회 (이때, 구분은 '사수'로)
-
+-- 3) 사수에 해당하는 직원에 대한 정보 추출 조회 
+-- (이때, 구분은 '사수'로)
+SELECT 
+	EMP_ID, EMP_NAME, 
+	NVL(D.DEPT_TITLE,'없음') DEPT_TITLE, J.JOB_NAME, 
+	'사수' AS "구분"
+FROM EMPLOYEE E
+LEFT JOIN DEPARTMENT D ON (D.DEPT_ID = E.DEPT_CODE)
+JOIN JOB J ON (J.JOB_CODE=E.JOB_CODE)
+WHERE 
+	E.EMP_ID IN (
+		SELECT DISTINCT MANAGER_ID 
+		FROM EMPLOYEE 
+		WHERE MANAGER_ID IS NOT NULL
+	);
 
 -- 4) 일반 직원에 해당하는 사원들 정보 조회 (이때, 구분은 '사원'으로)
-
+SELECT 
+	EMP_ID, EMP_NAME, 
+	NVL(D.DEPT_TITLE,'없음') DEPT_TITLE, J.JOB_NAME, 
+	'사원' AS "구분"
+FROM EMPLOYEE E
+LEFT JOIN DEPARTMENT D ON (D.DEPT_ID = E.DEPT_CODE)
+JOIN JOB J ON (J.JOB_CODE=E.JOB_CODE)
+WHERE 
+	E.EMP_ID NOT IN ( -- 사수 역할을 갖지 않는 사원만 조회 (17행)
+		SELECT DISTINCT MANAGER_ID 
+		FROM EMPLOYEE 
+		WHERE MANAGER_ID IS NOT NULL
+	);
             
 
 -- 5) 3, 4의 조회 결과를 하나로 합침 -> SELECT절 SUBQUERY
 -- * SELECT 절에도 서브쿼리 사용할 수 있음
+SELECT 
+	EMP_ID, EMP_NAME, 
+	NVL(D.DEPT_TITLE,'없음') DEPT_TITLE, J.JOB_NAME, 
+	'사수' AS "구분"
+FROM EMPLOYEE E
+LEFT JOIN DEPARTMENT D ON (D.DEPT_ID = E.DEPT_CODE)
+JOIN JOB J ON (J.JOB_CODE=E.JOB_CODE)
+WHERE 
+	E.EMP_ID IN (
+		SELECT DISTINCT MANAGER_ID 
+		FROM EMPLOYEE 
+		WHERE MANAGER_ID IS NOT NULL
+	)
 
+UNION -- 합집합
 
+SELECT 
+	EMP_ID, EMP_NAME, 
+	NVL(D.DEPT_TITLE,'없음') DEPT_TITLE, J.JOB_NAME, 
+	'사원' AS "구분"
+FROM EMPLOYEE E
+LEFT JOIN DEPARTMENT D ON (D.DEPT_ID = E.DEPT_CODE)
+JOIN JOB J ON (J.JOB_CODE=E.JOB_CODE)
+WHERE 
+	E.EMP_ID NOT IN ( -- 사수 역할을 갖지 않는 사원만 조회 (17행)
+		SELECT DISTINCT MANAGER_ID 
+		FROM EMPLOYEE 
+		WHERE MANAGER_ID IS NOT NULL
+	);
 
 
 
