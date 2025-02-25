@@ -61,12 +61,16 @@ WHERE SALARY >= (
 /*  서브쿼리 유형
 
     - 단일행 서브쿼리 : 서브쿼리의 조회 결과 값의 개수가 1개일 때 
+    	(1행 1열, WHERE절 사용 시 =, !=, >, < 등의 비교 연산 사용)
     
-    - 다중행 서브쿼리 : 서브쿼리의 조회 결과 값의 개수가 여러개일 때
+    - 다중행 서브쿼리 : 서브쿼리의 조회 결과 값의 개수가 여러개일 때 
+    	(N행 1열, WHERE절 사용 시 IN, NOT IN, > ANY, > ALL 등 사용)
     
-    - 다중열 서브쿼리 : 서브쿼리의 SELECT 절에 자열된 항목수가 여러개 일 때
+    - 다중열 서브쿼리 : 서브쿼리의 SELECT 절에 자열된 항목수가 여러개 일 때 
+    	(1행 N열, WHERE절 사용 시 비교하려는 컬럼을 (A, B)괄호로 묶어 지정)
     
     - 다중행 다중열 서브쿼리 : 조회 결과 행 수와 열 수가 여러개일 때 
+    	(N행 N열, IN 같은 연산자 + 컬럼을 (A,B) 묶어)
     
     - 상관 서브쿼리 : 서브쿼리가 만든 결과 값을 메인 쿼리가 비교 연산할 때 
                      메인 쿼리 테이블의 값이 변경되면 서브쿼리의 결과값도 바뀌는 서브쿼리
@@ -485,17 +489,50 @@ WHERE
 -------------------------- 연습문제 -------------------------------
 -- 1. 노옹철 사원과 같은 부서, 같은 직급인 사원을 조회하시오. (단, 노옹철 사원은 제외)
 --    사번, 이름, 부서코드, 직급코드, 부서명, 직급명
-
+SELECT
+	E.EMP_ID, E.EMP_NAME, E.DEPT_CODE, 
+	E.JOB_CODE, DEPT_TITLE, J.JOB_NAME
+FROM EMPLOYEE E
+JOIN DEPARTMENT ON (DEPT_ID=DEPT_CODE)
+JOIN JOB J ON (E.JOB_CODE=J.JOB_CODE)
+WHERE EMP_NAME = (
+	SELECT EMP_NAME
+	FROM EMPLOYEE
+	WHERE DEPT_CODE = 'D9' 
+	AND JOB_CODE = 'J2' AND EMP_NAME <> '노옹철'
+);
 
 
 -- 2. 2010년도에 입사한 사원의 부서와 직급이 같은 사원을 조회하시오
 --    사번, 이름, 부서코드, 직급코드, 고용일
 
+-- 유재식의 부서와 직급이 같은 사원 D6, J3
+SELECT 
+	EMP_ID, EMP_NAME, DEPT_CODE, JOB_CODE, HIRE_DATE
+FROM EMPLOYEE 
+WHERE DEPT_CODE = 'D6' 
+AND JOB_CODE = 'J3' 
+AND EMP_NAME <> (
+	SELECT EMP_NAME
+	FROM EMPLOYEE
+	WHERE EXTRACT(YEAR FROM HIRE_DATE) = 2010
+);
 
 
 -- 3. 87년생 여자 사원과 동일한 부서이면서 동일한 사수를 가지고 있는 사원을 조회하시오
 --    사번, 이름, 부서코드, 사수번호, 주민번호, 고용일     
-                  
+SELECT 
+	EMP_ID, EMP_NAME, DEPT_CODE, 
+	MANAGER_ID, EMP_NO, HIRE_DATE 
+FROM EMPLOYEE 
+WHERE DEPT_CODE = 'D1'
+AND MANAGER_ID = 214
+AND EMP_NAME <> (
+	SELECT EMP_NAME 
+	FROM EMPLOYEE
+	WHERE SUBSTR(EMP_NO, 1, 2) = 87
+	AND SUBSTR(EMP_NO, 8, 1) = 2
+);
 
 
 
@@ -530,8 +567,6 @@ WHERE
 		GROUP BY JOB_CODE
 	);
                   
-                
-
 -------------------------------------------------------------------------------
 
 -- 5. 상[호연]관 서브쿼리
