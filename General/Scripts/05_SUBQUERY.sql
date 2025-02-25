@@ -576,21 +576,72 @@ WHERE
 -- 상관쿼리는 먼저 메인쿼리 한 행을 조회하고
 -- 해당 행이 서브쿼리의 조건을 충족하는지 확인하여 SELECT를 진행함
 
+/* EXISTS(서브쿼리)
+ * - 서브쿼리 조회 결과가 
+ * 	 1행 이상 존재하면 TRUE -> MAIN QUERY 결과에 포함 O
+ *   0행이면 FALSE 반환 		-> MAIN QUERY 결과에 포함 X
+ */
 
 -- 사수가 있는 직원의 사번, 이름, 부서명, 사수사번 조회
-
+SELECT 
+	MAIN.EMP_ID, MAIN.EMP_NAME, D.DEPT_TITLE, MAIN.MANAGER_ID
+FROM EMPLOYEE MAIN
+LEFT JOIN DEPARTMENT D ON (MAIN.DEPT_CODE = D.DEPT_ID);
+WHERE 
+	EXISTS(
+		SELECT '사수 있음'
+		FROM EMPLOYEE SUB
+		WHERE SUB.EMP_ID = MAIN.MANAGER_ID
+										/* MAIN의 MANAGER_ID */
+	);
+/* [상호연관 서브쿼리 해석순서]
+ * 1) 메인 쿼리 1줄을 해석
+ * 2) 해석된 메인 쿼리 1행의 컬럼 값을 서브쿼리에서 사용
+ * 3) (메인 쿼리 WHERE절 사용 시)
+ * 		서브쿼리의 결과가 먼저 해석된 메인 쿼리 1행에 영향을 줌
+ * 		-> 최종 결과(RESULT SET)에 포함될지 안 될지 지정함
+ */
 
 
 -- 직급별 급여 평균보다 급여를 많이 받는 직원의 
 -- 이름, 직급코드, 급여 조회
-
-
+SELECT
+	MAIN.EMP_NAME , MAIN.JOB_CODE , MAIN.SALARY 
+FROM EMPLOYEE MAIN
+WHERE SALARY > (
+	SELECT AVG(SUB.SALARY)
+	FROM EMPLOYEE SUB
+	WHERE SUB.JOB_CODE = MAIN.JOB_CODE
+										/* MAIN 해석된 1행의 JOB_CODE */
+);
 
 -- 부서별 입사일이 가장 빠른 사원의
 --    사번, 이름, 부서명(NULL이면 '소속없음'), 직급명, 입사일을 조회하고
 --    입사일이 빠른 순으로 조회하세요
 --    단, 퇴사한 직원은 제외하고 조회하세요
+SELECT 
+	MAIN.EMP_ID , MAIN.EMP_NAME , 
+	NVL(D.DEPT_TITLE,'소속없음') AS DEPT_TITLE, 
+	J.JOB_NAME , MAIN.HIRE_DATE 
+FROM EMPLOYEE MAIN
+LEFT JOIN DEPARTMENT D ON (MAIN.DEPT_CODE=D.DEPT_ID)
+JOIN JOB J ON (MAIN.JOB_CODE=J.JOB_CODE)
+WHERE 
+	MAIN.HIRE_DATE = (
+		SELECT MIN(SUB.HIRE_DATE)
+		FROM EMPLOYEE SUB
+		WHERE 
+			NVL(SUB.DEPT_CODE, '소속없음') 
+			= NVL(MAIN.DEPT_CODE, '소속없음')
+		AND ENT_YN != 'Y'
+	)
+ORDER BY MAIN.HIRE_DATE ASC;
 
+-- 'D5' 부서에서 가장 빠른 입사일
+SELECT MIN(HIRE_DATE)
+FROM EMPLOYEE 
+WHERE DEPT_CODE = 'D2'
+AND ENT_YN != 'Y'; -- 퇴사자 제외
 
 
 ----------------------------------------------------------------------------------
