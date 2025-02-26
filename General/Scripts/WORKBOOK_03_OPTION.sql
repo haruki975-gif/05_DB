@@ -103,13 +103,21 @@ SELECT *
 FROM TB_DEPARTMENT
 WHERE DEPARTMENT_NO = '059'; 
 -- 음악학과
-
 SELECT 
-	S.STUDENT_NO, S.STUDENT_NAME, ROUND(SUM(G.POINT),1)
+	S.STUDENT_NO AS "학번", 
+	S.STUDENT_NAME AS "학생 이름", 
+	ROUND(AVG(G.POINT),2) AS "전체 평점"
 FROM TB_STUDENT S
 JOIN TB_GRADE G ON (S.STUDENT_NO = G.STUDENT_NO)
-WHERE DEPARTMENT_NO = '059'
-ORDER BY STUDENT_NO ASC;
+JOIN TB_DEPARTMENT D ON (S.DEPARTMENT_NO=D.DEPARTMENT_NO)
+WHERE D.DEPARTMENT_NO = '059' 
+AND G.POINT IN (
+	SELECT ROUND(AVG(SUB.POINT),2)
+	FROM TB_GRADE SUB
+	GROUP BY SUB.STUDENT_NO
+)
+GROUP BY S.STUDENT_NO, S.STUDENT_NAME, G.POINT
+ORDER BY "학번" ASC;
 
 SELECT * FROM TB_STUDENT WHERE DEPARTMENT_NO = '059';
 SELECT * FROM TB_GRADE; -- STUDENT_NO, POINT
@@ -117,7 +125,9 @@ SELECT * FROM TB_GRADE; -- STUDENT_NO, POINT
 
 -- 11 번
 -- 학번이 A313047인 학생의 학과이름, 학생이름, 지도교수 이름을 조회하시오.
-
+SELECT 
+	CLASS_NAME 
+FROM TB_CLASS;
 
 
 -- 12번
@@ -131,7 +141,7 @@ SELECT * FROM TB_GRADE; -- STUDENT_NO, POINT
 -- 과목 이름, 학과 이름을 조회하시오.
 
 
--- 14 번
+-- 14번
 -- 춘 기술대학교 서반아어학과 학생들의 지도교수를 게시하고자 한다.
 -- 학생이름, 지도교수이름 학번이 높은 순서로 조회하는 SQL을 작성하시오.
 -- 단, 지도교수가 없을 경우 "지도교수 미지정"으로 표시
@@ -151,7 +161,7 @@ SELECT * FROM TB_GRADE; -- STUDENT_NO, POINT
 -- 춘 기술대학교에 다니고 있는 최경희 학생과 같은 과 학생들의 이름과 주소를 조회하시오.
 
 
--- 18 번
+-- 18번
 -- 국어국문학과에서 총 평점이 가장 높은 학생의 이름과 학번을 조회하시오
 
 
