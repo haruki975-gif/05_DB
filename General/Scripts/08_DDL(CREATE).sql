@@ -366,6 +366,8 @@ VALUES(NULL, 'user01', 'pass01', '신사임당', '여', '010-9999-9999', 'sin123
 
 
 -- 4. FOREIGN KEY(외부키 / 외래키) 제약조건 
+--> FOREIGN KEY가 설정된 값은 외부 테이블의 값을 저장할 수 있다
+--->(== 다른 테이블에서 사용할 수 있다(참조))
 
 -- 참조(REFERENCES)된 다른 테이블의 컬럼이 제공하는 값만 사용할 수 있음
 -- FOREIGN KEY제약조건에 의해서 테이블간의 관계(RELATIONSHIP)가 형성됨
@@ -381,7 +383,7 @@ VALUES(NULL, 'user01', 'pass01', '신사임당', '여', '010-9999-9999', 'sin123
 --참조할 테이블의 참조할 컬럼명이 생략이 되면, PRIMARY KEY로 설정된 컬럼이 자동 참조할 컬럼이 됨
 
 CREATE TABLE USER_GRADE(
-  GRADE_CODE NUMBER PRIMARY KEY,
+  GRADE_CODE NUMBER PRIMARY KEY, -- FK 제약조건으로 참조할 수 있는 대상
   GRADE_NAME VARCHAR2(30) NOT NULL
 );
 INSERT INTO USER_GRADE VALUES (10, '일반회원');
@@ -399,7 +401,17 @@ CREATE TABLE USER_USED_FK(
   GENDER VARCHAR2(10),
   PHONE VARCHAR2(30),
   EMAIL VARCHAR2(50),
-  GRADE_CODE NUMBER
+  GRADE_CODE NUMBER, -- 10 20 30 + NULL만 저장 가능!!
+  
+  -- 테이블 레벨 FK 설정
+  CONSTRAINT GRADE_CODE_FK1 FOREIGN KEY(GRADE_CODE) REFERENCES USER_GRADE(GRADE_CODE)
+  -- 현재 테이블의 GRADE_CODE 컬럼의 저장할 값은
+  -- UDER_GRADE 테이블의 GRADE_CODE 컬럼에 저장된 값만 가능!!
+  -- == 참조
+  
+  /* 두 테이블에 똑같은 값이 작성되어 제이터 중복으로 보이지만
+   * 실제로는 원본 1개를 참조하고 있어서 중복으로 판단 X
+   */
   
 );
 
@@ -437,9 +449,14 @@ SELECT * FROM USER_USED_FK;
 -- 1) ON DELETE RESTRICTED(삭제 제한)로 기본 지정되어 있음
 -- FOREIGN KEY로 지정된 컬럼에서 사용되고 있는 값일 경우
 -- 제공하는 컬럼의 값은 삭제하지 못함
+DELETE FROM USER_GRADE WHERE GRADE_CODE = 10;
+DELETE FROM USER_GRADE WHERE GRADE_CODE = 10;
+-- 무결성 제약조건(KH17_LEB.GRADE_CODE_FK1)이 위배되었습니다- 
+-- 자식 레코드가 발견되었습니다
 
 -- GRADE_CODE 중 20은 외래키로 참조되고 있지 않으므로 삭제가 가능함.
-
+DELETE FROM USER_GRADE WHERE GRADE_CODE = 20;
+SELECT * FROM USER_GRADE;
 
 
 -- 2) ON DELETE SET NULL : 부모키 삭제시 자식키를 NULL로 변경하는 옵션
@@ -461,7 +478,11 @@ CREATE TABLE USER_USED_FK2(
   GENDER VARCHAR2(10),
   PHONE VARCHAR2(30),
   EMAIL VARCHAR2(50),
-  GRADE_CODE NUMBER
+  
+  -- 컬럼 레벨 설정
+  GRADE_CODE NUMBER CONSTRAINT GRADE_CODE_FK2
+  REFERENCES USER_GRADE2(GRADE_CODE)
+  ON DELETE SET NULL
   
 );
 
@@ -485,8 +506,8 @@ SELECT * FROM USER_USED_FK2;
 
 -- 부모 테이블인 USER_GRADE2에서 GRADE_COE =10 삭제
 --> ON DELETE SET NULL 옵션이 설정되어 있어 오류없이 삭제됨.
-
-
+DELETE FROM USER_GRADE2 WHERE GRADE_CODE=10;
+SELECT * FROM USER_USED_FK2; -- 부모가 지워지면 자식을 NULL로 세팅
 
 
 
@@ -511,8 +532,13 @@ CREATE TABLE USER_USED_FK3(
   GENDER VARCHAR2(10),
   PHONE VARCHAR2(30),
   EMAIL VARCHAR2(50),
-  GRADE_CODE NUMBER
+  GRADE_CODE NUMBER,
   
+  -- 테이블 레벨
+  -- CONSTRAINT GRADE_CODE_FK3 -- 제약조건명 설정(생략 가능)
+  FOREIGN KEY(GRADE_CODE)
+  REFERENCES USER_GRADE3(GRADE_CODE)
+  ON DELETE CASCADE -- 부모행 삭제 시 참조하는 모든 자식행 삭제
 );
 
 --샘플 데이터 삽입
@@ -530,19 +556,36 @@ VALUES(4, 'user04', 'pass04', '안중근', '남', '010-2222-1111', 'ahn123@kh.or
 
 COMMIT;
 
-SELECT * FROM USER_GRADE3;
-SELECT * FROM USER_USED_FK3;
+SELECT * FROM USER_GRADE3; -- 3행
+SELECT * FROM USER_USED_FK3; -- 4행
 
 
--- 부모 테이블인 USER_GRADE3에서 GRADE_COE =10 삭제
+-- 부모 테이블인 USER_GRADE3에서 GRADE_CODE =10 삭제
 --> ON DELETE CASECADE 옵션이 설정되어 있어 오류없이 삭제됨.
-
+DELETE FROM USER_GRADE3 WHERE GRADE_CODE = 10;
 
 -- ON DELETE CASECADE 옵션으로 인해 참조키를 사용한 행이 삭제됨을 확인
+SELECT * FROM USER_GRADE3; -- 10 삭제
+SELECT * FROM USER_USED_FK3; -- 10을 참조하던 홍길동, 이순신 삭제
 
+/* FK 제약조건을 이용하면 테이블간에 관계가 형성
+ * -> 참조를 당하는 부모 테이블의 컬럼과
+ * 		참조를 하는 자식 테이블의 컬럼값이 같은 형태를 띄게 됨
+ * 		-> JOIN에 사용 가능 여부를 명시하는 것!!!
+ */
 
+SELECT * FROM USER_GRADE;
+SELECT * FROM USER_USED_FK;
+
+SELECT * 
+FROM USER_USED_FK CHILD
+LEFT 
+	JOIN USER_GRADE PARENT 
+	ON (CHILD.GRADE_CODE=PARENT.GRADE_CODE);
 
 ----------------------------------------------------------------------------------------------------------------
+
+/* CHECK 제약조건은 FK의 하위 호환 */
 
 -- 5. CHECK 제약조건 : 컬럼에 기록되는 값에 조건 설정을 할 수 있음
 -- CHECK (컬럼명 비교연산자 비교값)
@@ -552,9 +595,16 @@ CREATE TABLE USER_USED_CHECK(
   USER_ID VARCHAR2(20) UNIQUE,
   USER_PWD VARCHAR2(30) NOT NULL,
   USER_NAME VARCHAR2(30),
-  GENDER VARCHAR2(10) ,
+  
+  -- 컬럼 레벨 CHECK 설정
+  GENDER VARCHAR2(10) 
+  CONSTRAINT GENDER_CHECK 
+  CHECK(GENDER IN ('남', '여')),
+  
   PHONE VARCHAR2(30),
   EMAIL VARCHAR2(50)
+  
+  -- CHECK는 테이블 레벨 작성법도 컬럼 레벨과 동일함!!
 );
 
 INSERT INTO USER_USED_CHECK
@@ -564,10 +614,31 @@ INSERT INTO USER_USED_CHECK
 VALUES(2, 'user02', 'pass02', '홍길동', '남자', '010-1234-5678', 'hong123@kh.or.kr');
 -- GENDER 컬럼에 CHECK 제약조건으로 '남' 또는 '여'만 기록 가능한데 '남자'라는 조건 이외의 값이 들어와 에러 발생
 
-
+/* CHECK 제약조건은 설정이 간편하지만
+ * 조건을 수정하는데 어려움이 있다!!!
+ * 
+ * -> 그래서 조건이 다양한 경우에는 
+ * 		FK 제약조건을 이용하는 것이 좋다!!!
+ */
 
 -- CHECK 제약 조건은 범위로도 설정 가능.
+CREATE TABLE CHECK_TEST(
+	TEST_NAME VARCHAR2(20) PRIMARY KEY,
+	TEST_SCORE NUMBER
+	CONSTRAINT CHECK_SCORE
+	CHECK(TEST_SCORE BETWEEN 1 AND 100)
+);
 
+INSERT INTO CHECK_TEST VALUES('짱구', 40);
+INSERT INTO CHECK_TEST VALUES('유리', 90);
+INSERT INTO CHECK_TEST VALUES('맹구', 100);
+
+INSERT INTO CHECK_TEST VALUES('철수', 300);
+-- 체크 제약조건(KH17_LEB.CHECK_SCORE)이 위배되었습니다
+INSERT INTO CHECK_TEST VALUES('훈이', 0);
+-- 체크 제약조건(KH17_LEB.CHECK_SCORE)이 위배되었습니다
+
+SELECT * FROM CHECK_TEST;
  
  ----------------------------------------------------------------------------------------------------------------
 
@@ -583,32 +654,90 @@ VALUES(2, 'user02', 'pass02', '홍길동', '남자', '010-1234-5678', 'hong123@k
 --         STATUS(탈퇴여부) - NOT NULL(NN_STATUS), 'Y' 혹은 'N'으로 입력(CK_STATUS)
 -- 각 컬럼의 제약조건에 이름 부여할 것
 -- 5명 이상 INSERT할 것
+DROP TABLE USER_TEST; -- 잘못 만들었을 때 한 번씩 실행
+
+CREATE TABLE USER_TEST(
+	USER_NO NUMBER,
+	USER_ID VARCHAR2(20),
+	USER_PWD VARCHAR2(30) CONSTRAINT NN_USER_PWD NOT NULL,
+	PNO CHAR(14)					CONSTRAINT NN_PNO NOT NULL,
+	GENDER CHAR(3),
+	PHONE VARCHAR2(30),
+	ADDRESS VARCHAR2(80),
+	STATUS CHAR(1)				CONSTRAINT NN_STATUS NOT NULL,
+	
+	-- 테이블 레벨
+	CONSTRAINT PK_USER_NO PRIMARY KEY(USER_NO),
+	CONSTRAINT UK_USER_ID UNIQUE(USER_ID),
+	CONSTRAINT UK_PNO 		UNIQUE(PNO),
+	CONSTRAINT CK_GENDER  CHECK(GENDER IN ('남', '여')),
+	CONSTRAINT CK_STATUS  CHECK(STATUS IN ('Y', 'N'))
+);
 
 
+COMMENT ON COLUMN "USER_TEST".USER_NO IS '회원번호';
+COMMENT ON COLUMN "USER_TEST".USER_ID IS '회원아이디';
+COMMENT ON COLUMN "USER_TEST".USER_PWD IS '회원비밀번호';
+COMMENT ON COLUMN "USER_TEST".PNO IS '주민등록번호';
+COMMENT ON COLUMN "USER_TEST".GENDER IS '성별';
+COMMENT ON COLUMN "USER_TEST".PHONE IS '연락처';
+COMMENT ON COLUMN "USER_TEST".ADDRESS IS '주소';
+COMMENT ON COLUMN "USER_TEST".STATUS IS '탈퇴여부';
+
+INSERT INTO USER_TEST VALUES(1, 'MEM01', 'MEM1234', '971130-2222555', '남', '01012345678', '서울시 서대문구', 'N');
+INSERT INTO USER_TEST VALUES(2, 'MEM02', 'MEM5678', '908512-2222555', '여', '01012345678', '인천시 서구', 'Y');
+INSERT INTO USER_TEST VALUES(3, 'MEM03', 'MEM5566', '961205-2222555', '남', '01012345678', '서울시 동대문구', 'N');
+INSERT INTO USER_TEST VALUES(4, 'MEM04', 'MEM1111', '980001-2222555', '여', '01012345678', '인천시 남동구', 'Y');
+INSERT INTO USER_TEST VALUES(5, 'MEM05', 'MEM2223', '957802-2222555', '남', '01012345678', '서울시 종로구', 'N');
+SELECT * FROM USER_TEST;
 
 ----------------------------------------------------------------------------------------------------------------
 
 -- 8. SUBQUERY를 이용한 테이블 생성
 -- 컬럼명, 데이터 타입, 값이 복사되고, 제약조건은 NOT NULL 만 복사됨
+--> 서브쿼리로 테이블 생성 시
+--  별도의 제약조건 설정, DEFAULT 설정, COMMENT 설정 등이 필요!!
+
 
 -- 1) 테이블 전체 복사
-
-SELECT * FROM EMPLOYEE_COPY;
+-- CREATE TABLE 테이블명 AS 서브쿼리
+CREATE TABLE EMPLOYEE_COPY AS(
+	SELECT * FROM EMPLOYEE
+);
 
 -- 2) JOIN 후 원하는 컬럼만 테이블로 복사
+-- 사번, 이름, 부서명(없음), 직급명, 급여 조회
+CREATE TABLE EMPLOYEE_COPY2 AS
+SELECT 
+	E.EMP_ID, E.EMP_NAME, 
+	NVL(D.DEPT_TITLE, '없음') AS DEPT_TITLE, 
+	J.JOB_NAME, E.SALARY
+FROM 			EMPLOYEE E
+LEFT JOIN DEPARTMENT D ON (E.DEPT_CODE=D.DEPT_ID)
+JOIN 			JOB J ON (E.JOB_CODE=J.JOB_CODE)
+ORDER BY 	E.JOB_CODE ASC;
 
-
+SELECT * FROM EMPLOYEE_COPY2;
 
 
 -- 9. 제약조건 추가
 -- ALTER TABLE 테이블명 ADD [CONSTRAINT 제약조건명] PRIMARY KEY(컬럼명)
 -- ALTER TABLE 테이블명 ADD [CONSTRAINT 제약조건명] 
---  FOREIGN KEY(컬럼명) REFERENCES 참조 테이블명(참조컬럼명)
-     --> 참조 테이블의 PK를 기본키를 FK로 사용하는 경우 참조컬럼명 생략 가능
+-- FOREIGN KEY(컬럼명) REFERENCES 참조 테이블명(참조컬럼명)
+   --> 참조 테이블의 PK를 기본키를 FK로 사용하는 경우 참조컬럼명 생략 가능
                                                                                                                                                       
 -- ALTER TABLE 테이블명 ADD [CONSTRAINT 제약조건명] UNIQUE(컬럼명)
 -- ALTER TABLE 테이블명 ADD [CONSTRAINT 제약조건명] CHECK(컬럼명 비교연산자 비교값)
+
 -- ALTER TABLE 테이블명 MODIFY 컬럼명 NOT NULL;
+
+/* PK, FK, UNIQUE, CHECK 제약조건은
+ * 컬럼을 제약하는 별도의 객체를 추가(ADD)하는 모습
+ * 
+ * NOT NULL은
+ * 컬럼의 상태(NULL 허용, NULL 불가)를 수정(MODIFY)하는 모습
+ */
+
 
 -- 테이블 제약 조건 확인
 SELECT * 
@@ -626,21 +755,32 @@ ALTER TABLE EMPLOYEE_COPY ADD CONSTRAINT PK_EMP_COPY PRIMARY KEY(EMP_ID);
 
 -- EMPLOYEE테이블의 DEPT_CODE에 외래키 제약조건 추가
 -- 참조 테이블은 DEPARTMENT, 참조 컬럼은 DEPARTMENT의 기본키
-
+-- FOREIGN KEY(컬럼명) REFERENCES 참조 테이블명(참조컬럼명)
+ALTER TABLE EMPLOYEE ADD CONSTRAINT DEPT_CODE_ID
+FOREIGN KEY(DEPT_CODE) 
+REFERENCES DEPARTMENT(DEPT_ID);
 
 -- EMPLOYEE테이블의 JOB_CODE 외래키 제약조건 추가
 -- 참조 테이블은 JOB, 참조 컬럼은 JOB의 기본키
-
+ALTER TABLE EMPLOYEE ADD CONSTRAINT JOB_CODE_FK
+FOREIGN KEY(JOB_CODE) 
+REFERENCES JOB(JOB_CODE);
 
 -- EMPLOYEE테이블의 SAL_LEVEL 외래키 제약조건 추가
 -- 참조 테이블은 SAL_GRADE, 참조 컬럼은 SAL_GRADE의 기본키
-
+ALTER TABLE EMPLOYEE ADD CONSTRAINT SAL_LEVEL_FK
+FOREIGN KEY(SAL_LEVEL) 
+REFERENCES SAL_GRADE(SAL_LEVEL);
 
 -- DEPARTMENT테이블의 LOCATION_ID에 외래키 제약조건 추가
 -- 참조 테이블은 LOCATION, 참조 컬럼은 LOCATION의 기본키
-
+ALTER TABLE DEPARTMENT ADD CONSTRAINT LOCATION_ID_FK
+FOREIGN KEY(LOCATION_ID) 
+REFERENCES LOCATION(LOCAL_CODE);
 
 -- LOCATION테이블의 NATIONAL_CODE에 외래키 제약조건 추가
 -- 참조 테이블은 NATIONAL, 참조 컬럼은 NATIONAL의 기본키
-
+ALTER TABLE LOCATION ADD CONSTRAINT NATIONAL_CODE_FK
+FOREIGN KEY(NATIONAL_CODE) 
+REFERENCES NATIONAL(NATIONAL_CODE);
 
