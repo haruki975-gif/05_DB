@@ -1,13 +1,13 @@
 /*
-- 데이터 딕셔너리란?
+- 데이터 딕셔너리(사전)란?
 자원을 효율적으로 관리하기 위한 다양한 정보를 저장하는 시스템 테이블
 데이터 딕셔너리는 사용자가 테이블을 생성하거나 사용자를 변경하는 등의
 작업을 할 때 데이터베이스 서버에 의해 자동으로 갱신되는 테이블
 
-
 - User_tables : 자신의 계정이 소유한 객체 등에 관한 정보를 조회 할 수 있는 딕셔너리 뷰
-
 */
+
+SELECT * FROM USER_TABLES;
 --------------------------------------------------------------------------------------------------------------------
 
 -- DDL(DATA DEFINITION LANGUAGE) : 데이터 정의 언어
@@ -16,9 +16,9 @@
 -- 데이터의 전체 구조를 정의하는 언어로 주로 DB관리자, 설계자가 사용함
 
 -- 오라클에서의 객체 : 테이블(TABLE), 뷰(VIEW), 시퀀스(SEQUENCE),
---                   인덱스(INDEX), 패키지(PACKAGE), 트리거(TRIGGER)
---                   프로시져(PROCEDURE), 함수(FUNCTION),
---                   동의어(SYNONYM), 사용자(USER)
+--                     인덱스(INDEX), 패키지(PACKAGE), 트리거(TRIGGER)
+--                     프로시져(PROCEDURE), 함수(FUNCTION),
+--                     동의어(SYNONYM), 사용자(USER)
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -30,7 +30,7 @@
 -- 1. 테이블 생성하기
 -- 테이블이란?
 -- 행(row)과 열(column)으로 구성되는 가장 기본적인 데이터베이스 객체
--- 데이터 배이스 내에서 모든 데이터는 테이블을 통해서 저장된다.
+-- 데이터 베이스 내에서 모든 데이터는 테이블을 통해서 저장된다.
 
 
 -- [표현식] 
@@ -43,11 +43,13 @@
 
 /* 자료형
     NUMBER : 숫자형(정수, 실수)
-    CHAR(크기) : 고정길이 문자형 (2000BYTE) 
+    CHAR(크기) : 고정길이 문자형 (2000 BYTE) 
         -> ex) CHAR(10) 컬럼에 'ABC' 3BYTE 문자열만 저장해도 10BYTE 저장공간을 모두 사용. 
+        -> 속도 효율적
         
     VARCHAR2(크기) : 가변길이 문자형 (4000 BYTE)
         -> ex) VARCHAR2(10) 컬럼에 'ABC' 3BYTE 문자열만 저장하면 나머지 7BYTE를 반환함.
+        -> 메모리 효율적
         
     DATE : 날짜 타입
     BLOB : 대용량 이진 데이터 (4GB)
@@ -56,16 +58,37 @@
 
 -- MEMBER 테이블 생성
 
-
+/* [MEMBER 테이블 설계]
+ * - 필요한 컬럼 : 아이디, 비밀번호, 이름, 주민등록번호, 가입일
+ * - 컬럼명, 자료형 생각하기
+ * 					 		 	 컬럼명       자료형(크기)
+ * 아이디   	 : 	MEMBER_ID			VARCHAR2(20)
+ * 비밀번호 	 :	MEMBER_PW  		VARCHAR2(20)
+ * 이름     	 :	MEMBER_NAME		VARCHAR2(15) 한글 포함 5글자
+ * 주민등록번호:  MEMBER_SSN		CHAR(14) 		 -(하이픈) 포함
+ * 가입일			 :	ENROLL_DATE   DATE		
+ * -> 기본값을 SYSDATE로 지정
+ */
+CREATE TABLE "MEMBER"(
+	MEMBER_ID 	VARCHAR(20),
+	MEMBER_PW 	VARCHAR2(20),
+	MEMBER_NAME VARCHAR2(15),
+	MEMBER_SSN 	CHAR(14),
+	ENROLL_DATE DATE DEFAULT SYSDATE
+);
 
 -- 만든 테이블 확인
-
+SELECT * FROM "MEMBER";
+SELECT * FROM USER_TABLES;
 
 -- 2. 컬럼에 주석 달기
 -- [표현식]
 -- COMMENT ON COLUMN 테이블명.컬럼명 IS '주석내용';
-
-
+COMMENT ON COLUMN "MEMBER".MEMBER_ID IS '회원 아이디';
+COMMENT ON COLUMN "MEMBER".MEMBER_PW IS '회원 비밀번호';
+COMMENT ON COLUMN "MEMBER".MEMBER_NAME IS '회원 이름';
+COMMENT ON COLUMN "MEMBER".MEMBER_SSN IS '회원 주민등록번호';
+COMMENT ON COLUMN "MEMBER".ENROLL_DATE IS '회원 가입일';
 
 
 -- USER_TABLES : 사용자가 작성한 테이블을 확인 하는 뷰
@@ -77,25 +100,31 @@ DESC MEMBER;
 
 
 -- MEMBER 테이블에 샘플 데이터 삽입
-
+INSERT INTO "MEMBER"
+VALUES('MEM01', '123ABC', '신해량', '990226-1234567', SYSDATE);
 
 
 --  데이터  삽입 확인
-
+SELECT * FROM "MEMBER";
 
 
 -- 추가 샘플 데이터 삽입
 -- 가입일 -> SYSDATE를 활용
-
+INSERT INTO "MEMBER"
+VALUES('MEM02', 'QWER1234', '백애영', '981122-2345678', SYSDATE);
 
 -- 가입일 -> DEFAULT 활용(테이블 생성 시 정의된 값이 반영됨)
-
+INSERT INTO "MEMBER"
+VALUES('MEM03', 'QWER5678', '서지혁', '953344-3456789', DEFAULT);
+--> ENROLL_DATE 컬럼에 설정된 DEFAULT 값(SYSDATE) 삽입
 
 -- 가입일 -> INSERT 시 미작성 하는 경우 -> DEAFULT 값이 반영됨
-
+INSERT INTO "MEMBER"(MEMBER_ID, MEMBER_PW, MEMBER_NAME, MEMBER_SSN)
+VALUES('MEM04', 'QAWS1234', '박무현', '920125-3444567');
+--> EMROLL_DATE 컬럼에 DEFAULT 대입되는지 확인
 
 --  데이터  삽입 확인
-
+SELECT * FROM "MEMBER";
 
 
 --------------------------------------------------------------------------------------------------------------------
@@ -105,34 +134,42 @@ DESC MEMBER;
 /*
     사용자가 원하는 조건의 데이터만 유지하기 위해서 특정 컬럼에 설정하는 제약.
     데이터 무결성 보장을 목적으로 함.
-
+		(데이터 무결성 : 결점 없는 데이터, 신뢰도가 높은 데이터)
+		--> 중복X
+		 
     + 입력 데이터에 문제가 없는지 자동으로 검사하는 목적
     + 데이터의 수정/삭제 가능여부 검사등을 목적으로 함 
         --> 제약조건을 위배하는 DML 구문은 수행할 수 없음!
     
-    제약조건 종류
+    제약조건 종류(암기)
     PRIMARY KEY, NOT NULL, UNIQUE, CHECK, FOREIGN KEY.
-    
 */
 
 -- 제약 조건 확인
 -- USER_CONSTRAINTS : 사용자가 작성한 제약조건을 확인 하는 딕셔너리 뷰 
-DESC USER_CONSTRAINTS;
 SELECT * FROM USER_CONSTRAINTS;
 
 -- USER_CONS_COLUMNS : 제약조건이 걸려 있는 컬럼을 확인 하는 딕셔너리 뷰 
-DESC USER_CONS_COLUMNS;
 SELECT * FROM USER_CONS_COLUMNS;
-
 
 
 -- 1. NOT NULL 
 -- 해당 컬럼에 반드시 값이 기록되어야 하는 경우 사용
 -- 삽입/수정시 NULL값을 허용하지 않도록 컬럼레벨에서 제한
 
+/* CREATE TABLE 수행 시 제약조건을 설정하는 방법
+ * 1) 컬럼 레벨 설정 : 테이블 컬럼을 선언할 때 제약조건 추가
+ * --> 컬럼명 자료형 [CONSTRAINT 제약조건명] 제약조건
+ * 
+ * 2) 테이블 레벨 설정 : 테이블 생성 구문 제일 밑에 작성해서 제약조건 추가
+ * --> [CONSTRAINT 제약조건명] 제약조건(지정할 컬럼명) 
+ */
+
+/* NOT NULL 제약조건은 "컬럼 레벨"로만 설정 가능 */
 
 CREATE TABLE USER_USED_NN(
-    USER_NO , 
+    --USER_NO NUMBER NOT NULL, -- 제약조건명 미지정 시 "SYS~" 형태로 자동 지정 
+    USER_NO NUMBER CONSTRAINT USER_NO_NN NOT NULL, 
     
     USER_ID VARCHAR2(20) ,
     USER_PWD VARCHAR2(30) ,
@@ -141,6 +178,7 @@ CREATE TABLE USER_USED_NN(
     PHONE VARCHAR2(30),
     EMAIL VARCHAR2(50)
 );
+SELECT * FROM USER_USED_NN;
 
 
 INSERT INTO USER_USED_NN
@@ -159,18 +197,24 @@ VALUES(NULL, NULL, NULL, NULL, NULL, '010-1234-5678', 'hong123@kh.or.kr');
 -- 컬럼레벨에서 설정 가능, 테이블 레벨에서 설정 가능
 -- 단, UNIQUE 제약 조건이 설정된 컬럼에 NULL 값은 중복 삽입 가능.
 
+DROP TABLE USER_USED_UK; -- 테이블 삭제
 
 -- UNIQUE 제약 조건 테이블 생성
 CREATE TABLE USER_USED_UK(
     USER_NO NUMBER,
-    USER_ID VARCHAR2(20) , 
+    
+    -- 컬럼 레벨로 UNIQUE 설정
+    --USER_ID VARCHAR2(20) CONSTRAINT USER_ID_U UNIQUE, 
+    USER_ID VARCHAR2(20),
     
     USER_PWD VARCHAR2(30) ,
     USER_NAME VARCHAR2(30),
     GENDER VARCHAR2(10),
     PHONE VARCHAR2(30),
-    EMAIL VARCHAR2(50)
-
+    EMAIL VARCHAR2(50),
+    
+    -- 테이블 레벨로 USER_ID 컬럼에 UNIQUE 제약조건 지정
+    CONSTRAINT USER_ID_U UNIQUE(USER_ID)
 );
 
 
@@ -197,7 +241,7 @@ SELECT  * FROM USER_USED_UK;
 SELECT UCC.TABLE_NAME, UCC.COLUMN_NAME, UC.CONSTRAINT_TYPE
 FROM USER_CONSTRAINTS UC, USER_CONS_COLUMNS UCC
 WHERE UCC.CONSTRAINT_NAME = UC.CONSTRAINT_NAME
-AND UCC.CONSTRAINT_NAME = '제약조건명';
+AND UCC.CONSTRAINT_NAME = 'USER_ID_U';
 
 
 ---------------------------------------
@@ -205,6 +249,10 @@ AND UCC.CONSTRAINT_NAME = '제약조건명';
 
 -- UNIQUE 복합키
 -- 두 개 이상의 컬럼을 묶어서 하나의 UNIQUE 제약조건을 설정함
+--> UNIQUE 복합키가 설정된 모든 컬럼의 값이 같으면 중복으로 판단
+---> 한 컬럼의 값이라도 다르면 중복 X
+
+/* 복합키 설정은 테이블 레벨로만 설정 가능!!! */
 CREATE TABLE USER_USED_UK2(
     USER_NO NUMBER,
     USER_ID VARCHAR2(20),
@@ -212,8 +260,9 @@ CREATE TABLE USER_USED_UK2(
     USER_NAME VARCHAR2(30),
     GENDER VARCHAR2(10),
     PHONE VARCHAR2(30),
-    EMAIL VARCHAR2(50)
-  
+    EMAIL VARCHAR2(50),
+  	
+    CONSTRAINT USER_ID_NAME_U UNIQUE(USER_ID, USER_NAME)
 );
 
 
@@ -221,15 +270,15 @@ INSERT INTO USER_USED_UK2
 VALUES(1, 'user01', 'pass01', '홍길동', '남', '010-1234-5678', 'hong123@kh.or.kr');
 
 INSERT INTO USER_USED_UK2
-VALUES(2, 'user01', 'pass01', '홍길동', '남', '010-1234-5678', 'hong123@kh.or.kr');
---> USER_NO가 다름
+VALUES(2, 'user01', 'pass01', '고길동', '남', '010-1234-5678', 'hong123@kh.or.kr');
+--> USER_NAME이 다름 -> 중복 X
 
 INSERT INTO USER_USED_UK2
 VALUES(2, 'user02', 'pass01', '홍길동', '남', '010-1234-5678', 'hong123@kh.or.kr');
 --> USER_ID가 다름
 
 INSERT INTO USER_USED_UK2
-VALUES(1, 'user01', 'pass01', '홍길동', '남', '010-1234-5678', 'hong123@kh.or.kr');
+VALUES(1, 'user01', 'pass01', '고길동', '남', '010-1234-5678', 'hong123@kh.or.kr');
 --> 여러 컬럼을 묶어서 UNIQUE 제약 조건이 설정되어 있으면 
 -- 두 컬럼이 모두 중복되는 값일 경우에만 오류 발생
 
@@ -242,14 +291,20 @@ SELECT * FROM USER_USED_UK2;
 
 -- 테이블에서 한 행의 정보를 찾기위해 사용할 컬럼을 의미함
 -- 테이블에 대한 식별자(IDENTIFIER) 역할을 함
--- NOT NULL + UNIQUE 제약조건의 의미
+	 --> 주민번호, 회원번호, 주문번호
+
+-- NOT NULL + UNIQUE 제약조건의 특징이 합쳐져 있음
 -- 한 테이블당 한 개만 설정할 수 있음
+	 --> PK 제약조건이 1개!
+	 --> PK가 설정된 컬럼은 1개 또는 여러 개 (PK 복합키)
+
 -- 컬럼레벨, 테이블레벨 둘다 설정 가능함
 -- 한 개 컬럼에 설정할 수도 있고, 여러개의 컬럼을 묶어서 설정할 수 있음
 
 
 CREATE TABLE USER_USED_PK(
-    USER_NO NUMBER ,
+		-- 컬럼 레벨 설정
+    USER_NO NUMBER CONSTRAINT USER_NO_PK PRIMARY KEY,
     
     USER_ID VARCHAR2(20) UNIQUE,
     USER_PWD VARCHAR2(30) NOT NULL,
@@ -257,7 +312,9 @@ CREATE TABLE USER_USED_PK(
     GENDER VARCHAR2(10),
     PHONE VARCHAR2(30),
     EMAIL VARCHAR2(50)
-
+		
+    -- 테이블 레벨
+    -- , CONSTRAINT USER_NO_PK PRIMARY KEY(USER_NO)
 );
 
 INSERT INTO USER_USED_PK

@@ -42,91 +42,106 @@ SELECT * FROM DEPARTMENT3;
 
 
 /* - INSERT INTO 테이블명 VALUES(값...)
- * 
  * - INSERT INTO 테이블명(컬럼명...) VALUES(값...)
- * 
  * - UPDATE 테이블명 SET 컬럼명 = 변경값 [WHERE 조건]
- * 
  * - DELETE FROM 테이블명 [WHERE 조건]
- * 
  * */
 
-
 -- 'D0', '경리부', 'L2' 삽입
-
-
+INSERT INTO DEPARTMENT3 VALUES('D0', '경리부', 'L2');
 
 -- DEPARTMENT3 테이블
 -- DEPT_ID가 'D9'인 부서의 이름과 지역코드를
 -- '전략기획팀', 'L3' 로 수정.
+UPDATE DEPARTMENT3 SET 
+DEPT_TITLE ='전략기획팀', LOCATION_ID ='L3' 
+WHERE DEPT_ID ='D9';
 
+SELECT * FROM DEPARTMENT3;
 
 
 /* 현재 트랜잭션에 저장된 DML(INSERT, UPDATE) 구문을
  * 실제로 DB에 반영 -> COMMIT */
-
+COMMIT;
+SELECT * FROM DEPARTMENT3;
 
 /* 트랜잭션에 저장된 내용 삭제 -> ROLLBACK */
-
+ROLLBACK;
 
 -- (COMMIT, ROLLBACK 사이에 수행한 DML이 없으므로 변화 없음)
 SELECT * FROM DEPARTMENT3;
 
-
 ----------------------------------------------------------------
 
 -- DEPT_ID 가 'D0'인 행을 삭제
-
+DELETE 
+FROM DEPARTMENT3
+WHERE DEPT_ID = 'D0';
 
 
 -- DEPT_ID 가 'D9'인 행을 삭제
-
+DELETE 
+FROM DEPARTMENT3
+WHERE DEPT_ID = 'D9';
 
 
 -- DEPT_ID 가 'D8'인 행을 삭제
+DELETE 
+FROM DEPARTMENT3
+WHERE DEPT_ID = 'D8';
 
-
-
-
+SELECT * FROM DEPARTMENT3;
 
 /* 트랜잭션에 저장된 DML(DELETE 3번) 모두 삭제 */
-
-
-
+ROLLBACK;
+SELECT * FROM DEPARTMENT3; -- 복구됨
 
 ----------------------------------------------------------------
 /* SAVEPOINT */
 
 -- DEPT_ID 가 'D0'인 행을 삭제
-
+DELETE 
+FROM DEPARTMENT3
+WHERE DEPT_ID = 'D0';
 
 -- SAVEPOINT "SP1" 저장 지점 설정
-
+SAVEPOINT "SP1";
 
 
 -- DEPT_ID 가 'D9'인 행을 삭제
-
+DELETE 
+FROM DEPARTMENT3
+WHERE DEPT_ID = 'D9';
 
 -- SAVEPOINT "SP2" 저장 지점 설정
+SAVEPOINT "SP2";
 
 
 -- DEPT_ID 가 'D8'인 행을 삭제
-
+DELETE 
+FROM DEPARTMENT3
+WHERE DEPT_ID = 'D8';
 
 -- SAVEPOINT "SP3" 저장 지점 설정
-
+SAVEPOINT "SP3";
 
 -- DEPARTMENT3 전체 삭제
+DELETE FROM DEPARTMENT3;
+SELECT * FROM DEPARTMENT3;
 
+-- "SP3" 까지 롤백 (전체삭제 취소)
+ROLLBACK TO "SP3";
+SELECT * FROM DEPARTMENT3;
 
--- "SP3" 까지 롤백
+-- "SP2" 까지 롤백 (D8 취소)
+ROLLBACK TO "SP2";
+SELECT * FROM DEPARTMENT3;
 
+-- "SP1" 까지 롤백 (D9 취소)
+ROLLBACK TO "SP1";
+SELECT * FROM DEPARTMENT3;
 
--- "SP2" 까지 롤백
-
-
--- "SP1" 까지 롤백
-
--- 'D0' 도 복구 -> 그냥 ROLLBACK
-
-
+-- 'D0' 도 복구 
+--> 그냥 ROLLBACK == SAVEPOINT 무시하고 전체 롤백
+ROLLBACK;
+SELECT * FROM DEPARTMENT3;
